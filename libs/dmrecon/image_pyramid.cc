@@ -130,7 +130,7 @@ ImagePyramidCache::get(mve::Scene::Ptr scene, mve::View::Ptr view,
 
     ensureImages(*pyramid, view, embeddingName, minLevel);
 }
-    usleep(500000);
+    usleep(5000);
     return pyramid;
 }
 
