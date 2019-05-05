@@ -11,6 +11,7 @@
 
 #include "mve/image_tools.h"
 #include <cassert>
+#include <unistd.h>
 
 MVS_NAMESPACE_BEGIN
 
@@ -99,6 +100,8 @@ ImagePyramid::ConstPtr
 ImagePyramidCache::get(mve::Scene::Ptr scene, mve::View::Ptr view,
     std::string embeddingName, int minLevel)
 {
+    ImagePyramid::Ptr pyramid;
+    {
     std::lock_guard<std::mutex> lock(ImagePyramidCache::metadataMutex);
 
     /* Initialize on first access. */
@@ -107,8 +110,6 @@ ImagePyramidCache::get(mve::Scene::Ptr scene, mve::View::Ptr view,
         ImagePyramidCache::cachedScene = scene;
         ImagePyramidCache::cachedEmbedding = embeddingName;
     }
-
-    ImagePyramid::Ptr pyramid;
 
     if (scene != ImagePyramidCache::cachedScene
         || embeddingName != ImagePyramidCache::cachedEmbedding)
@@ -128,6 +129,8 @@ ImagePyramidCache::get(mve::Scene::Ptr scene, mve::View::Ptr view,
     }
 
     ensureImages(*pyramid, view, embeddingName, minLevel);
+}
+    usleep(500000);
     return pyramid;
 }
 

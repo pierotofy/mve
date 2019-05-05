@@ -6,6 +6,8 @@
  * This software may be modified and distributed under the terms
  * of the BSD 3-Clause license. See the LICENSE.txt file for details.
  */
+#include <unistd.h>
+#include <stdlib.h>
 
 #include <fstream>
 #include <iostream>
@@ -35,7 +37,7 @@ View::load_view (std::string const& user_path)
     std::string safe_path = util::fs::sanitize_path(user_path);
     safe_path = util::fs::abspath(safe_path);
     this->deprecated_format_check(safe_path);
-
+usleep(10000 + rand() % 50000);
     /* Open meta.ini and populate images and blobs. */
     //std::cout << "View: Loading view: " << path << std::endl;
     this->clear();
@@ -151,7 +153,7 @@ View::load_view_from_mve_file  (std::string const& filename)
             std::cerr << "Unrecognized header: " << line << std::endl;
         }
     }
-
+usleep(10000 + rand() % 50000);
     /* Read embeddings and populate view. */
     for (std::size_t i = 0; i < embedding_buffers.size(); ++i)
     {
@@ -200,34 +202,41 @@ View::save_view_as (std::string const& user_path)
     if (!util::fs::dir_exists(safe_path.c_str()))
         if (!util::fs::mkdir(safe_path.c_str()))
             throw util::FileException(safe_path, std::strerror(errno));
-
+usleep(10000 + rand() % 50000);
     /* Load all images and BLOBS. */
     for (std::size_t i = 0; i < this->images.size(); ++i)
     {
         /* Image references will be copied on save. No need to load it here. */
         if (!util::fs::is_absolute(this->images[i].filename))
             this->load_image(&this->images[i], false);
+        usleep(10000 + rand() % 50000);
         this->images[i].is_dirty = true;
     }
     for (std::size_t i = 0; i < this->blobs.size(); ++i)
     {
         this->load_blob(&this->blobs[i], false);
+        usleep(10000 + rand() % 50000);
         this->blobs[i].is_dirty = true;
     }
 
     /* Save meta data, images and BLOBS, and free memory. */
     this->save_meta_data(safe_path);
+    usleep(10000 + rand() % 50000);
+
     this->path = safe_path;
+    usleep(10000 + rand() % 50000);
     this->save_view();
+    usleep(10000 + rand() % 50000);
     this->cache_cleanup();
 }
 
 int
 View::save_view (void)
 {
+
     if (this->path.empty())
         throw std::runtime_error("View not initialized");
-
+usleep(10000 + rand() % 50000);
     /* Save meta data. */
     int saved = 0;
     if (this->meta_data.is_dirty)
@@ -239,6 +248,7 @@ View::save_view (void)
     /* Save dirty images. */
     for (std::size_t i = 0; i < this->images.size(); ++i)
     {
+            std::cerr << "Image" << i << std::endl;
         if (this->images[i].is_dirty)
         {
             this->save_image_intern(&this->images[i]);
@@ -279,16 +289,20 @@ View::save_view (void)
 void
 View::clear (void)
 {
+    usleep(10000 + rand() % 50000);
+
     this->path.clear();
     this->meta_data = MetaData();
     this->images.clear();
     this->blobs.clear();
+    usleep(10000 + rand() % 50000);
+
     this->to_delete.clear();
 }
 
 bool
 View::is_dirty (void) const
-{
+{usleep(10000 + rand() % 50000);
     if (this->meta_data.is_dirty)
         return true;
     if (!this->to_delete.empty())
@@ -305,6 +319,8 @@ View::is_dirty (void) const
 int
 View::cache_cleanup (void)
 {
+    usleep(10000 + rand() % 50000);
+
     int released = 0;
     for (std::size_t i = 0; i < this->images.size(); ++i)
     {
@@ -332,6 +348,8 @@ View::cache_cleanup (void)
 std::size_t
 View::get_byte_size (void) const
 {
+    usleep(10000 + rand() % 50000);
+
     std::size_t ret = 0;
     for (std::size_t i = 0; i < this->images.size(); ++i)
         if (this->images[i].image != nullptr)
@@ -347,6 +365,8 @@ View::get_byte_size (void) const
 std::string
 View::get_value (std::string const& key) const
 {
+    usleep(10000 + rand() % 50000);
+
     if (key.empty())
         throw std::invalid_argument("Empty key");
     if (key.find_first_of('.') == std::string::npos)
@@ -361,6 +381,8 @@ View::get_value (std::string const& key) const
 void
 View::set_value (std::string const& key, std::string const& value)
 {
+    usleep(10000 + rand() % 50000);
+
     if (key.empty())
         throw std::invalid_argument("Empty key");
     if (key.find_first_of('.') == std::string::npos)
@@ -372,12 +394,16 @@ View::set_value (std::string const& key, std::string const& value)
 void
 View::delete_value (std::string const& key)
 {
+    usleep(10000 + rand() % 50000);
+
     this->meta_data.data.erase(key);
 }
 
 void
 View::set_camera (CameraInfo const& camera)
 {
+    usleep(10000 + rand() % 50000);
+
     this->meta_data.camera = camera;
     this->meta_data.is_dirty = true;
 
@@ -401,6 +427,8 @@ View::set_camera (CameraInfo const& camera)
 ImageBase::Ptr
 View::get_image (std::string const& name, ImageType type)
 {
+    usleep(10000 + rand() % 50000);
+
     View::ImageProxy* proxy = this->find_image_intern(name);
     if (proxy != nullptr)
     {
@@ -415,7 +443,8 @@ View::get_image (std::string const& name, ImageType type)
 
 View::ImageProxy const*
 View::get_image_proxy (std::string const& name, ImageType type)
-{
+{usleep(10000 + rand() % 50000);
+
     View::ImageProxy* proxy = this->find_image_intern(name);
     if (proxy != nullptr)
     {
@@ -445,6 +474,8 @@ View::set_image (ImageBase::Ptr image, std::string const& name)
         throw std::invalid_argument("Null image");
 
     ImageProxy proxy;
+    usleep(10000 + rand() % 50000);
+
     proxy.is_dirty = true;
     proxy.name = name;
     proxy.is_initialized = true;
@@ -466,6 +497,8 @@ View::set_image (ImageBase::Ptr image, std::string const& name)
 void
 View::set_image_ref (std::string const& filename, std::string name)
 {
+    usleep(10000 + rand() % 50000);
+
     if (filename.empty() || name.empty())
         throw std::invalid_argument("Empty argument");
 
@@ -487,6 +520,8 @@ View::set_image_ref (std::string const& filename, std::string name)
 bool
 View::remove_image (std::string const& name)
 {
+    usleep(10000 + rand() % 50000);
+
     for (ImageProxies::iterator iter = this->images.begin();
         iter != this->images.end(); ++iter)
     {
@@ -538,7 +573,7 @@ View::set_blob (ByteImage::Ptr blob, std::string const& name)
     proxy.is_initialized = true;
     proxy.size = blob->get_byte_size();
     proxy.blob = blob;
-
+usleep(10000 + rand() % 50000);
     for (std::size_t i = 0; i < this->blobs.size(); ++i)
         if (this->blobs[i].name == name)
         {
@@ -602,7 +637,7 @@ View::load_meta_data (std::string const& path)
     std::string cam_pp = this->get_value("camera.principal_point");
     std::string cam_rot = this->get_value("camera.rotation");
     std::string cam_trans = this->get_value("camera.translation");
-
+usleep(10000 + rand() % 50000);
     this->meta_data.camera = CameraInfo();
     if (!cam_fl.empty())
         this->meta_data.camera.flen = util::string::convert<float>(cam_fl);
@@ -632,7 +667,7 @@ View::save_meta_data (std::string const& path)
     //std::cout << "View: Saving meta data: " VIEW_IO_META_FILE << std::endl;
     std::string const fname = util::fs::join_path(path, VIEW_IO_META_FILE);
     std::string const fname_new = fname + ".new";
-
+usleep(10000 + rand() % 50000);
     std::ofstream out(fname_new.c_str(), std::ios::binary);
     if (!out.good())
         throw util::FileException(fname_new, std::strerror(errno));
@@ -709,6 +744,8 @@ View::populate_images_and_blobs (std::string const& path)
             std::cerr << "View: Unrecognized extension "
                 << file.name << ", skipping." << std::endl;
         }
+        usleep(10000 + rand() % 50000);
+
     }
 }
 
@@ -794,7 +831,7 @@ View::load_image_intern (ImageProxy* proxy, bool init_only)
         proxy->image = image::load_mvei_file(filename);
     else
         throw std::runtime_error("Unexpected image type");
-
+    usleep(10000 + rand() % 50000);
     proxy->is_dirty = false;
     proxy->width = proxy->image->width();
     proxy->height = proxy->image->height();
@@ -823,6 +860,8 @@ View::save_image_intern (ImageProxy* proxy)
     if (proxy == nullptr)
         throw std::runtime_error("Null proxy");
 
+    usleep(10000 + rand() % 50000);
+
     /* An absolute filename indicates an image reference. Copy file. */
     if (util::fs::is_absolute(proxy->filename))
     {
@@ -847,7 +886,7 @@ View::save_image_intern (ImageProxy* proxy)
     if (proxy->image->get_type() == IMAGE_TYPE_UINT8
         && proxy->image->channels() <= 4)
         use_png_format = true;
-
+    usleep(10000 + rand() % 50000);
     std::string filename = proxy->name + (use_png_format ? ".png" : ".mvei");
     std::string fname_orig = util::fs::join_path(this->path, proxy->filename);
     std::string fname_save = util::fs::join_path(this->path, filename);
@@ -872,15 +911,23 @@ View::save_image_intern (ImageProxy* proxy)
             && !util::fs::unlink(fname_orig.c_str()))
             throw util::FileException(fname_orig, std::strerror(errno));
     }
-
+    usleep(10000 + rand() % 50000);
     /* Fully update the proxy. */
     proxy->is_dirty = false;
+    usleep(10000 + rand() % 50000);
+
     proxy->filename = filename;
     proxy->width = proxy->image->width();
+    usleep(10000 + rand() % 50000);
+
     proxy->height = proxy->image->height();
     proxy->channels = proxy->image->channels();
+    usleep(10000 + rand() % 50000);
+
     proxy->type = proxy->image->get_type();
+    usleep(10000 + rand() % 50000);
     proxy->is_initialized = true;
+    std::cerr << "1" << std::endl;
 }
 
 /* ---------------------------------------------------------------- */
@@ -946,6 +993,9 @@ View::load_blob_intern (BlobProxy* proxy, bool init_only)
         return;
     }
 
+    usleep(10000 + rand() % 50000);
+
+
     /* Read blob payload. */
     //std::cout << "View: Loading BLOB: " << filename << std::endl;
     // FIXME: This limits BLOBs size to 2^31 bytes.
@@ -955,8 +1005,11 @@ View::load_blob_intern (BlobProxy* proxy, bool init_only)
         throw util::FileException(filename, "EOF while reading BLOB payload");
 
     proxy->blob = blob;
+    usleep(10000 + rand() % 50000);
+
     proxy->size = size;
     proxy->is_initialized = true;
+    std::cerr << "2" << std::endl;
 }
 
 void
@@ -992,11 +1045,15 @@ View::save_blob_intern (BlobProxy* proxy)
 
     /* On succesfull write, move the new file in place. */
     this->replace_file(fname_orig, fname_new);
-
+    usleep(10000 + rand() % 50000);
     /* Fully update the proxy. */
     proxy->is_dirty = false;
+    usleep(10000 + rand() % 50000);
+
     proxy->size = proxy->blob->get_byte_size();
     proxy->is_initialized = true;
+
+    std::cerr << "3" << std::endl;
 }
 
 /* ---------------------------------------------------------------- */
