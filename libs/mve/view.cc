@@ -8,6 +8,7 @@
  */
 #include <unistd.h>
 #include <stdlib.h>
+#include <mutex>
 
 #include <fstream>
 #include <iostream>
@@ -230,9 +231,12 @@ usleep(10000 + rand() % 50000);
     this->cache_cleanup();
 }
 
+std::mutex save_view_mutex;
+
 int
 View::save_view (void)
 {
+    std::lock_guard<std::mutex> lock(save_view_mutex);
 
     if (this->path.empty())
         throw std::runtime_error("View not initialized");
@@ -248,10 +252,11 @@ usleep(10000 + rand() % 50000);
     /* Save dirty images. */
     for (std::size_t i = 0; i < this->images.size(); ++i)
     {
-            std::cerr << "Image" << i << std::endl;
         if (this->images[i].is_dirty)
         {
+            // std::cerr << "Image" << i << std::endl;
             this->save_image_intern(&this->images[i]);
+            // std::cerr << "Image Out " << i << std::endl;
             saved += 1;
         }
     }
@@ -293,7 +298,9 @@ View::clear (void)
 
     this->path.clear();
     this->meta_data = MetaData();
+    std::cerr << "About to clear " << this->path << std::endl;
     this->images.clear();
+    std::cerr << "Cleared " << this->path << std::endl;
     this->blobs.clear();
     usleep(10000 + rand() % 50000);
 
@@ -319,6 +326,7 @@ View::is_dirty (void) const
 int
 View::cache_cleanup (void)
 {
+    std::cerr << "cache_cleanup: start" << std::endl;
     usleep(10000 + rand() % 50000);
 
     int released = 0;
@@ -338,6 +346,8 @@ View::cache_cleanup (void)
         proxy.blob.reset();
         released += 1;
     }
+
+    std::cerr << "cache_cleanup: end" << std::endl;
 
     //std::cout << "View: Released " << released
     //    << " cache entries." << std::endl;
@@ -528,6 +538,7 @@ View::remove_image (std::string const& name)
         if (iter->name == name)
         {
             this->to_delete.push_back(iter->filename);
+            std::cerr << "to delete: " << iter->filename << std::endl;
             this->images.erase(iter);
             return true;
         }
@@ -825,6 +836,7 @@ View::load_image_intern (ImageProxy* proxy, bool init_only)
     std::string ext5 = util::string::right(proxy->filename, 5);
     ext4 = util::string::lowercase(ext4);
     ext5 = util::string::lowercase(ext5);
+
     if (ext4 == ".png" || ext4 == ".jpg" || ext5 == ".jpeg")
         proxy->image = image::load_file(filename);
     else if (ext5 == ".mvei")
@@ -855,6 +867,9 @@ namespace
 void
 View::save_image_intern (ImageProxy* proxy)
 {
+    
+    std::cerr << "SII IN " << proxy->image << std::endl;
+
     if (this->path.empty())
         throw std::runtime_error("View not initialized");
     if (proxy == nullptr)
@@ -874,12 +889,14 @@ View::save_image_intern (ImageProxy* proxy)
         proxy->is_dirty = false;
         return;
     }
+    std::cerr << "A " << proxy->image << std::endl;
 
     if (proxy->image == nullptr || proxy->width != proxy->image->width()
         || proxy->height != proxy->image->height()
         || proxy->channels != proxy->image->channels()
         || proxy->type != proxy->image->get_type())
         throw std::runtime_error("Image specification mismatch");
+    std::cerr << "B " << proxy->image << std::endl;
 
     /* Generate a new filename for the image. */
     bool use_png_format = false;
@@ -891,6 +908,7 @@ View::save_image_intern (ImageProxy* proxy)
     std::string fname_orig = util::fs::join_path(this->path, proxy->filename);
     std::string fname_save = util::fs::join_path(this->path, filename);
     std::string fname_new = fname_save + ".new";
+    std::cerr << "C " << proxy->image << std::endl;
 
     /* Save the new image. */
     //std::cout << "View: Saving image: " << filename << std::endl;
@@ -899,6 +917,7 @@ View::save_image_intern (ImageProxy* proxy)
             std::dynamic_pointer_cast<ByteImage>(proxy->image), fname_new);
     else
         image::save_mvei_file(proxy->image, fname_new);
+    std::cerr << "D " << proxy->image << std::endl;
 
     /* On succesfull write, move the new file in place. */
     this->replace_file(fname_save, fname_new);
@@ -911,23 +930,29 @@ View::save_image_intern (ImageProxy* proxy)
             && !util::fs::unlink(fname_orig.c_str()))
             throw util::FileException(fname_orig, std::strerror(errno));
     }
+        std::cerr << "E " << proxy->image << std::endl;
+
     usleep(10000 + rand() % 50000);
     /* Fully update the proxy. */
     proxy->is_dirty = false;
     usleep(10000 + rand() % 50000);
+    std::cerr << "F " << proxy->image << std::endl;
 
     proxy->filename = filename;
     proxy->width = proxy->image->width();
     usleep(10000 + rand() % 50000);
+    std::cerr << "G " << proxy->image << std::endl;
 
     proxy->height = proxy->image->height();
     proxy->channels = proxy->image->channels();
     usleep(10000 + rand() % 50000);
+    std::cerr << "H " << proxy->image << std::endl;
 
     proxy->type = proxy->image->get_type();
     usleep(10000 + rand() % 50000);
     proxy->is_initialized = true;
-    std::cerr << "1" << std::endl;
+    std::cerr << "SII OU " << proxy->image << std::endl;
+
 }
 
 /* ---------------------------------------------------------------- */

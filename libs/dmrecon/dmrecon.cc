@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <set>
 #include <ctime>
+#include <mutex>
 
 #include "math/vector.h"
 #include "math/functions.h"
@@ -236,8 +237,9 @@ DMRecon::globalViewSelection()
     if (!settings.quiet)
         std::cout << "Loading color images..." << std::endl;
     for (IndexSet::const_iterator iter = neighViews.begin();
-        iter != neighViews.end() && !progress.cancelled; ++iter)
+        iter != neighViews.end() && !progress.cancelled; ++iter){
         views[*iter]->loadColorImage(0);
+    }
 }
 
 void
