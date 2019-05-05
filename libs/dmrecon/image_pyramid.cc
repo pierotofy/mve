@@ -150,8 +150,11 @@ ImagePyramidCache::cleanup()
 
         if (it->second.use_count() == 1)
         {
+            std::cerr << "ipc_cleanup " << it->first << ":start" << std::endl;
             it->second.reset();
             ImagePyramidCache::cachedScene->get_view_by_id(it->first)->cache_cleanup();
+            std::cerr << "ipc_cleanup " << it->first << ":end" << std::endl;
+            
         }
     }
 }
