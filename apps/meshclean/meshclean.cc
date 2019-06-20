@@ -190,6 +190,7 @@ main (int argc, char** argv)
         ply_opts.write_vertex_colors = !conf.delete_colors;
         ply_opts.write_vertex_confidences = !conf.delete_conf;
         ply_opts.write_vertex_values = !conf.delete_scale;
+        ply_opts.write_vertex_normals = true;
         mve::geom::save_ply_mesh(mesh, conf.out_mesh, ply_opts);
     }
     else
