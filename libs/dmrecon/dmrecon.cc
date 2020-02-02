@@ -24,6 +24,7 @@
 #include "dmrecon/settings.h"
 #include "dmrecon/dmrecon.h"
 #include "dmrecon/global_view_selection.h"
+#include "mve/bilateral.h"
 
 MVS_NAMESPACE_BEGIN
 
@@ -118,6 +119,8 @@ DMRecon::start()
 
         // Save images to view
         mve::View::Ptr view = refV->getMVEView();
+
+        refV->depthImg = mve::image::median_filter(refV->depthImg, 5);
 
         std::string name("depth-L");
         name += util::string::get(settings.scale);
