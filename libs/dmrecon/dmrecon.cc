@@ -81,9 +81,9 @@ DMRecon::DMRecon(mve::Scene::Ptr _scene, Settings const& _settings)
     this->width = scaled_img->width();
     this->height = scaled_img->height();
 
-    if (!settings.quiet)
-        std::cout << "scaled image size: " << this->width << " x "
-                  << this->height << std::endl;
+    // if (!settings.quiet)
+    //     std::cout << "scaled image size: " << this->width << " x "
+    //               << this->height << std::endl;
 }
 
 void
@@ -223,18 +223,18 @@ DMRecon::globalViewSelection()
         throw std::runtime_error("Global View Selection failed");
 
     /* Print result of global view selection. */
-    if (!settings.quiet)
-    {
-        std::cout << "Global View Selection:";
-        for (IndexSet::const_iterator iter = neighViews.begin();
-            iter != neighViews.end(); ++iter)
-            std::cout << " " << *iter;
-        std::cout << std::endl;
-    }
+    // if (!settings.quiet)
+    // {
+    //     std::cout << "Global View Selection:";
+    //     for (IndexSet::const_iterator iter = neighViews.begin();
+    //         iter != neighViews.end(); ++iter)
+    //         std::cout << " " << *iter;
+    //     std::cout << std::endl;
+    // }
 
     /* Load selected images. */
-    if (!settings.quiet)
-        std::cout << "Loading color images..." << std::endl;
+    // if (!settings.quiet)
+    //     std::cout << "Loading color images..." << std::endl;
     for (IndexSet::const_iterator iter = neighViews.begin();
         iter != neighViews.end() && !progress.cancelled; ++iter)
         views[*iter]->loadColorImage(0);
@@ -249,9 +249,9 @@ DMRecon::processFeatures()
     SingleView::Ptr refV = views[settings.refViewNr];
     mve::Bundle::Features const& features = bundle->get_features();
 
-    if (!settings.quiet)
-        std::cout << "Processing " << features.size()
-            << " features..." << std::endl;
+    // if (!settings.quiet)
+    //     std::cout << "Processing " << features.size()
+    //         << " features..." << std::endl;
 
     std::size_t success = 0;
     std::size_t processed = 0;
@@ -325,9 +325,9 @@ DMRecon::processFeatures()
             prQueue.push(tmpData);
         }
     }
-    if (!settings.quiet)
-        std::cout << "Processed " << processed << " features, from which "
-                  << success << " succeeded optimization." << std::endl;
+    // if (!settings.quiet)
+    //     std::cout << "Processed " << processed << " features, from which "
+    //               << success << " succeeded optimization." << std::endl;
 }
 
 void
@@ -338,16 +338,16 @@ DMRecon::processQueue()
 
     SingleView::Ptr refV = this->views[settings.refViewNr];
 
-    if (!settings.quiet)
-        std::cout << "Process queue ..." << std::endl;
+    // if (!settings.quiet)
+    //     std::cout << "Process queue ..." << std::endl;
 
     size_t count = 0, lastStatus = 1;
     progress.queueSize = prQueue.size();
-    if (!settings.quiet)
-        std::cout << "Count: " << std::setw(8) << count
-                  << "  filled: " << std::setw(8) << progress.filled
-                  << "  Queue: " << std::setw(8) << progress.queueSize
-                  << std::endl;
+    // if (!settings.quiet)
+    //     std::cout << "Count: " << std::setw(8) << count
+    //               << "  filled: " << std::setw(8) << progress.filled
+    //               << "  Queue: " << std::setw(8) << progress.queueSize
+    //               << std::endl;
     lastStatus = progress.filled;
 
     while (!prQueue.empty() && !progress.cancelled)
@@ -355,11 +355,11 @@ DMRecon::processQueue()
         progress.queueSize = prQueue.size();
         if ((progress.filled % 1000 == 0) && (progress.filled != lastStatus))
         {
-            if (!settings.quiet)
-                std::cout << "Count: " << std::setw(8) << count
-                          << "  filled: " << std::setw(8) << progress.filled
-                          << "  Queue: " << std::setw(8) << progress.queueSize
-                          << std::endl;
+            // if (!settings.quiet)
+            //     std::cout << "Count: " << std::setw(8) << count
+            //               << "  filled: " << std::setw(8) << progress.filled
+            //               << "  Queue: " << std::setw(8) << progress.queueSize
+            //               << std::endl;
             lastStatus = progress.filled;
         }
         QueueData tmpData = prQueue.top();

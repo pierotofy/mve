@@ -37,6 +37,7 @@ FancyProgressPrinter::start()
 void
 FancyProgressPrinter::run()
 {
+    this->lastCompleted = -1;
     this->isRunning = true;
     while (this->isRunning)
     {
@@ -51,8 +52,8 @@ FancyProgressPrinter::print()
 {
     std::lock_guard<std::mutex> lock(this->mutex);
 
-    std::cout << ANSI_CURSOR_RESET << ANSI_CLEAR_SCREEN;
-    std::cout << "Reconstructing " << this->basePath << "\n\n  ";
+    int completed = 0;
+    int queued = 0;
 
     for (std::vector<ViewStatus>::iterator it = this->viewStatus.begin();
         it != this->viewStatus.end(); ++it)
@@ -60,33 +61,34 @@ FancyProgressPrinter::print()
         switch (*it)
         {
         case STATUS_IGNORED:
-            std::cout << ANSI_STYLE_WHITE << '_';
+            completed += 1;
             break;
         case STATUS_QUEUED:
-            std::cout << ANSI_STYLE_WHITE << '.';
+            queued += 1;
             break;
         case STATUS_IN_PROGRESS:
-            std::cout << ANSI_STYLE_BOLD << ANSI_STYLE_YELLOW << '@';
+            queued += 1;
             break;
         case STATUS_DONE:
-            std::cout << ANSI_STYLE_BOLD << ANSI_STYLE_GREEN << '!';
+            completed += 1;
             break;
         case STATUS_FAILED:
-            std::cout << ANSI_STYLE_BOLD << ANSI_STYLE_RED << '!';
+            completed += 1;
             break;
         }
-
-        std::cout << ANSI_STYLE_RESET;
     }
 
-    std::cout << "\n\n";
-
-    for (std::set<mvs::DMRecon const*>::iterator it = this->runningRecons.begin();
-        it != this->runningRecons.end(); ++it)
-    {
-        mvs::Progress const &p = (*it)->getProgress();
-        std::cout << "View #" << (*it)->getRefViewNr()
-                  << ": filled " << p.filled
-                  << " of " << (p.filled + p.queueSize) << '\n';
+    if (this->lastCompleted != completed){
+        std::cout << completed << " of " << (completed + queued) << " completed (" << std::fixed << std::setprecision(2) << (100.0f * static_cast<float>(completed) / static_cast<float>(completed + queued)) << "%)" << std::endl;
+        this->lastCompleted = completed;
     }
+
+    // for (std::set<mvs::DMRecon const*>::iterator it = this->runningRecons.begin();
+    //     it != this->runningRecons.end(); ++it)
+    // {
+    //     mvs::Progress const &p = (*it)->getProgress();
+    //     std::cout << "View #" << (*it)->getRefViewNr()
+    //               << ": filled " << p.filled
+    //               << " of " << (p.filled + p.queueSize) << '\n';
+    // }
 }

@@ -320,6 +320,7 @@ main (int argc, char** argv)
 
     if (conf.progress_style == PROGRESS_FANCY)
         fancyProgressPrinter.stop();
+        fancyProgressPrinter.print();
 
     std::cout << "Reconstruction took "
         << timer.get_elapsed() << "ms." << std::endl;

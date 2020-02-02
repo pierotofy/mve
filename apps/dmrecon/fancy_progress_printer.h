@@ -79,6 +79,7 @@ private:
     std::mutex mutex;
     std::string basePath;
     bool isRunning;
+    int lastCompleted;
 
     std::vector<ViewStatus> viewStatus;
     std::set<mvs::DMRecon const *> runningRecons;
